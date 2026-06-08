@@ -435,10 +435,13 @@ const sizeTag = document.getElementById('size-tag');
 
 function setTurn(){
   if(gameOver) return;
+  const dot = turnEl.querySelector('.dot');
   if(turn===humanColor){
     turnEl.className='turn you'; turnText.textContent='Your move';
+    dot.style.background = humanColor===RED ? 'var(--red)' : 'var(--blue)';
   } else {
     turnEl.className='turn cpu'; turnText.textContent='CPU thinking…';
+    dot.style.background = cpuColor===RED ? 'var(--red)' : 'var(--blue)';
   }
 }
 
