@@ -87,9 +87,7 @@
      font-family:'JetBrains Mono',monospace;font-weight:600;margin:0 0 10px;
      border-bottom:1px solid var(--rule);padding-bottom:6px}
   .turn{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:6px 0 16px}
-  .turn .dot{display:inline-block;width:14px;height:14px;border:1.5px solid var(--rule);margin-right:8px;transform:translateY(1px)}
-  .turn.you .dot{background:var(--red)}
-  .turn.cpu .dot{background:var(--blue)}
+  .turn .dot{display:inline-block;width:14px;height:14px;border:1.5px solid var(--rule);margin-right:8px;transform:translateY(1px);background:#6f5a3d}
   p.rules{font-size:14px;line-height:1.45;color:var(--ink);margin:0 0 14px}
   p.rules b{color:var(--red)}
   p.rules i{color:var(--blue);font-style:normal;font-weight:500}
@@ -435,13 +433,10 @@ const sizeTag = document.getElementById('size-tag');
 
 function setTurn(){
   if(gameOver) return;
-  const dot = turnEl.querySelector('.dot');
   if(turn===humanColor){
     turnEl.className='turn you'; turnText.textContent='Your move';
-    dot.style.background = humanColor===RED ? 'var(--red)' : 'var(--blue)';
   } else {
     turnEl.className='turn cpu'; turnText.textContent='CPU thinking…';
-    dot.style.background = cpuColor===RED ? 'var(--red)' : 'var(--blue)';
   }
 }
 
@@ -496,7 +491,7 @@ function endGame(winner){
   const youWon = (winner===humanColor);
   banner.classList.add('show');
   bannerText.textContent = youWon?'You win.':'CPU wins.';
-  bannerText.style.color = youWon?'var(--red)':'var(--blue)';
+  bannerText.style.color = '#3a2a1a';
   bannerSub.textContent = youWon?'connection complete · click NEW GAME':'click NEW GAME to play again';
 }
 
