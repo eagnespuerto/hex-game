@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>HEX</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2 L29.86 10 L29.86 22 L16 30 L2.14 22 L2.14 10 Z' fill='%23b54327' stroke='%237a2818' stroke-width='1.5' stroke-linejoin='round'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -39,9 +40,10 @@
     padding:18px 24px 14px;
     display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;
   }
-  .brand{font-weight:800;font-size:34px;letter-spacing:-.02em;line-height:.9}
+  .brand{font-weight:800;font-size:34px;letter-spacing:-.02em;line-height:.9;display:flex;align-items:center;gap:10px}
   .brand em{font-style:italic;color:var(--red)}
   .brand .slash{color:var(--blue)}
+  .brand-icon{width:30px;height:30px;display:block}
   .sub{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
   main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;padding:24px;align-items:start}
   @media (max-width:900px){ main{grid-template-columns:1fr} }
@@ -127,7 +129,7 @@
 <body>
 <header>
   <div>
-    <div class="brand">HEX</div>
+    <div class="brand"><svg class="brand-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 L29.86 10 L29.86 22 L16 30 L2.14 22 L2.14 10 Z" fill="#b54327" stroke="#7a2818" stroke-width="1.5" stroke-linejoin="round"/></svg>HEX</div>
     <div class="sub">connection game · <span style="color:var(--red)">red</span> vs. <span style="color:var(--blue)">blue</span></div>
   </div>
   <div class="sub" id="size-tag">11 × 11</div>
@@ -180,7 +182,7 @@
 
 <footer>
   <span>○ Hex · invented Hein 1942 / Nash 1948</span>
-  <span id="ver">v1.1 · single file</span>
+  <span><a href="https://github.com/eagnespuerto/hex-game" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline">GitHub</a> · <span id="ver">v1.1 · single file</span></span>
 </footer>
 
 <script>
