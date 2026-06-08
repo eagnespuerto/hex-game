@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>HEX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ede4d3;
+    --panel:#f7f0df;
+    --board:#0f3a3a;
+    --board-soft:#15514f;
+    --cell:#e8d9b8;
+    --cell-hover:#f3e6c3;
+    --ink:#1a1410;
+    --rule:#1a1410;
+    --red:#b54327;
+    --red-deep:#7a2818;
+    --red-hi:#e07b5b;
+    --blue:#26365e;
+    --blue-deep:#13203f;
+    --blue-hi:#6a7eb0;
+    --gold:#c8961f;
+    --muted:#6f6753;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:'Fraunces',serif;
+    background-image:
+      radial-gradient(ellipse at 15% -10%, rgba(181,67,39,.10), transparent 55%),
+      radial-gradient(ellipse at 110% 110%, rgba(38,54,94,.12), transparent 55%);
+    min-height:100vh;
+  }
+  header{
+    border-bottom:2px solid var(--rule);
+    padding:18px 24px 14px;
+    display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+  .brand{font-weight:800;font-size:34px;letter-spacing:-.02em;line-height:.9}
+  .brand em{font-style:italic;color:var(--red)}
+  .brand .slash{color:var(--blue)}
+  .sub{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;padding:24px;align-items:start}
+  @media (max-width:900px){ main{grid-template-columns:1fr} }
+
+  .board-wrap{
+    border:2px solid var(--rule);
+    background:var(--board);
+    background-image:
+      radial-gradient(ellipse at 50% 0%, var(--board-soft), var(--board) 70%);
+    padding:18px;
+    position:relative;
+    box-shadow:6px 6px 0 var(--rule);
+  }
+  .board-wrap::before{
+    content:"";position:absolute;inset:6px;border:1px solid rgba(232,217,184,.25);pointer-events:none;
+  }
+  svg{display:block;width:100%;height:auto;touch-action:manipulation}
+  .hex{stroke:rgba(10,38,37,.55);stroke-width:.05;stroke-linejoin:round;fill:var(--cell);cursor:pointer;transition:fill .15s}
+  .hex:hover{fill:var(--cell-hover)}
+  .hex.played{cursor:default}
+  .stone-r{fill:var(--red);stroke:none}
+  .stone-r-hi{fill:var(--red-hi);opacity:.5}
+  .stone-b{fill:var(--blue);stroke:none}
+  .stone-b-hi{fill:var(--blue-hi);opacity:.45}
+  .stone-group{transform-box:fill-box;transform-origin:center;animation:plop .28s cubic-bezier(.34,1.56,.64,1) both}
+  @keyframes plop{
+    0%   { transform:scale(.2); opacity:0 }
+    60%  { transform:scale(1.12); opacity:1 }
+    100% { transform:scale(1); opacity:1 }
+  }
+  .edge-r{stroke:var(--red);stroke-width:.75;fill:none;stroke-linejoin:miter;stroke-linecap:butt}
+  .edge-b{stroke:var(--blue-hi);stroke-width:.75;fill:none;stroke-linejoin:miter;stroke-linecap:butt}
+  .board-fill{fill:#000;stroke:none}
+  .label{font-family:'JetBrains Mono',monospace;font-size:11px;fill:var(--muted)}
+
+  aside{
+    border:2px solid var(--rule);background:var(--panel);padding:18px;
+    box-shadow:6px 6px 0 var(--rule);
+  }
+  h2{font-size:13px;letter-spacing:.22em;text-transform:uppercase;
+     font-family:'JetBrains Mono',monospace;font-weight:600;margin:0 0 10px;
+     border-bottom:1px solid var(--rule);padding-bottom:6px}
+  .turn{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:6px 0 16px}
+  .turn .dot{display:inline-block;width:14px;height:14px;border:1.5px solid var(--rule);margin-right:8px;transform:translateY(1px)}
+  .turn.you .dot{background:var(--red)}
+  .turn.cpu .dot{background:var(--blue)}
+  p.rules{font-size:14px;line-height:1.45;color:var(--ink);margin:0 0 14px}
+  p.rules b{color:var(--red)}
+  p.rules i{color:var(--blue);font-style:normal;font-weight:500}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  button, select{
+    font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    border:1.5px solid var(--rule);background:var(--bg);color:var(--ink);padding:10px 14px;cursor:pointer;
+    transition:transform .08s, background .15s;
+  }
+  button:hover{background:var(--ink);color:var(--bg)}
+  button:active{transform:translate(1px,1px)}
+  button.primary{background:var(--ink);color:var(--bg)}
+  button.primary:hover{background:var(--red)}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:11px}
+  .stat{border:1px solid var(--rule);padding:8px}
+  .stat span{display:block;color:var(--muted);font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:2px}
+
+  .banner{
+    position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(15,58,58,.55);backdrop-filter:blur(3px);
+    text-align:center;padding:24px;
+  }
+  .banner.show{display:flex}
+  .banner-card{
+    background:var(--panel);border:2px solid var(--rule);box-shadow:6px 6px 0 var(--rule);
+    padding:28px 40px;display:flex;flex-direction:column;gap:10px;align-items:center;
+    color:var(--ink);
+  }
+  .banner-card > div{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .banner small{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:400}
+
+  footer{padding:14px 24px;border-top:2px solid var(--rule);
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand">HEX</div>
+    <div class="sub">connection game · <span style="color:var(--red)">red</span> vs. <span style="color:var(--blue)">blue</span></div>
+  </div>
+  <div class="sub" id="size-tag">11 × 11</div>
+</header>
+
+<main>
+  <div class="board-wrap">
+    <svg id="board" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="banner" id="banner"><div class="banner-card"><div id="banner-text"></div><small id="banner-sub"></small></div></div>
+  </div>
+
+  <aside>
+    <h2>Status</h2>
+    <div class="turn you" id="turn"><span class="dot"></span><span id="turn-text">Your move</span></div>
+
+    <p class="rules">
+      Place a stone on any empty cell. <b>Red</b> wins by linking top↔bottom; <i>Blue</i> wins by linking left↔right. The first connected chain wins — no draws are possible.
+    </p>
+
+    <h2>Controls</h2>
+    <div class="row">
+      <button class="primary" id="new">New Game</button>
+      <button id="swap">Pie Rule</button>
+    </div>
+    <div class="row">
+      <select id="size">
+        <option value="7">7 × 7</option>
+        <option value="9">9 × 9</option>
+        <option value="11" selected>11 × 11</option>
+        <option value="13">13 × 13</option>
+      </select>
+      <select id="who">
+        <option value="human" selected>You start</option>
+        <option value="cpu">CPU starts</option>
+      </select>
+    </div>
+
+    <h2 style="margin-top:18px">Engine</h2>
+    <div class="stats">
+      <div class="stat"><span>Moves</span><b id="moves">0</b></div>
+      <div class="stat"><span>CPU eval (ms)</span><b id="ms">—</b></div>
+      <div class="stat"><span>Blue dist*</span><b id="bd">—</b></div>
+      <div class="stat"><span>Red dist*</span><b id="rd">—</b></div>
+    </div>
+    <p class="rules" style="margin-top:10px;font-size:12px;color:var(--muted)">
+      *Dijkstra distance to win: empty=1, own=0, enemy=∞. CPU plays the move that minimizes its own distance minus yours.
+    </p>
+  </aside>
+</main>
+
+<footer>
+  <span>○ Hex · invented Hein 1942 / Nash 1948</span>
+  <span id="ver">v1.1 · single file</span>
+</footer>
+
+<script>
+/* ----------  SOUND  ---------- */
+let audioCtx = null;
+function playPlop(){
+  try {
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(420, t);
+    osc.frequency.exponentialRampToValueAtTime(110, t + 0.13);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.28, t + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.20);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.22);
+  } catch(e){}
+}
+
+/* ----------  HEX ENGINE  ---------- */
+const RED = 1, BLUE = 2, EMPTY = 0;
+const NEIGH = [[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]];
+
+let N = 11;
+let board = [];
+let turn = RED;
+let humanColor = RED;
+let cpuColor = BLUE;
+let gameOver = false;
+let moveCount = 0;
+let canSwap = false;
+let firstMove = null;
+let lastMove = null;
+
+function newBoard(n){
+  N = n;
+  board = Array.from({length:n},()=>Array(n).fill(EMPTY));
+  turn = RED; gameOver=false; moveCount=0; canSwap=false; firstMove=null; lastMove=null;
+}
+
+function inBounds(q,r){ return q>=0 && q<N && r>=0 && r<N; }
+
+function dijkstra(color){
+  const INF = Infinity;
+  const dist = Array.from({length:N},()=>Array(N).fill(INF));
+  const heap = [];
+  const push=(d,q,r)=>{ heap.push([d,q,r]); for(let i=heap.length-1;i>0;){const p=(i-1)>>1;if(heap[p][0]>heap[i][0]){[heap[p],heap[i]]=[heap[i],heap[p]];i=p;}else break;} };
+  const pop=()=>{ const t=heap[0];const l=heap.pop();if(heap.length){heap[0]=l;let i=0;for(;;){let a=i*2+1,b=a+1,m=i;if(a<heap.length&&heap[a][0]<heap[m][0])m=a;if(b<heap.length&&heap[b][0]<heap[m][0])m=b;if(m===i)break;[heap[m],heap[i]]=[heap[i],heap[m]];i=m;}}return t; };
+
+  const cost=(q,r)=>{
+    const v = board[q][r];
+    if(v===color) return 0;
+    if(v===EMPTY) return 1;
+    return INF;
+  };
+
+  const sources = [];
+  if(color===RED){ for(let q=0;q<N;q++) sources.push([q,0]); }
+  else            { for(let r=0;r<N;r++) sources.push([0,r]); }
+
+  for(const [q,r] of sources){
+    const c = cost(q,r);
+    if(c<dist[q][r]){ dist[q][r]=c; push(c,q,r); }
+  }
+
+  while(heap.length){
+    const [d,q,r] = pop();
+    if(d>dist[q][r]) continue;
+    for(const [dq,dr] of NEIGH){
+      const nq=q+dq, nr=r+dr;
+      if(!inBounds(nq,nr)) continue;
+      const nd = d + cost(nq,nr);
+      if(nd<dist[nq][nr]){ dist[nq][nr]=nd; push(nd,nq,nr); }
+    }
+  }
+
+  let best = INF;
+  if(color===RED){ for(let q=0;q<N;q++) best = Math.min(best, dist[q][N-1]); }
+  else           { for(let r=0;r<N;r++) best = Math.min(best, dist[N-1][r]); }
+  return best;
+}
+
+function checkWin(color){ return dijkstra(color) === 0; }
+
+function aiMove(){
+  const t0 = performance.now();
+  let bestScore = -Infinity, best=null;
+  for(let q=0;q<N;q++)for(let r=0;r<N;r++){
+    if(board[q][r]!==EMPTY) continue;
+    board[q][r]=cpuColor;
+    if(checkWin(cpuColor)){ board[q][r]=EMPTY; return {move:[q,r],ms:performance.now()-t0,bd:0,rd:dijkstra(humanColor)}; }
+    board[q][r]=EMPTY;
+  }
+  for(let q=0;q<N;q++)for(let r=0;r<N;r++){
+    if(board[q][r]!==EMPTY) continue;
+    board[q][r]=humanColor;
+    const humanWins = checkWin(humanColor);
+    board[q][r]=EMPTY;
+    if(humanWins){
+      board[q][r]=cpuColor;
+      const cd = dijkstra(cpuColor), hd = dijkstra(humanColor);
+      board[q][r]=EMPTY;
+      return {move:[q,r],ms:performance.now()-t0,bd:cd,rd:hd};
+    }
+  }
+
+  let bestCpu=Infinity, bestHuman=0;
+  for(let q=0;q<N;q++)for(let r=0;r<N;r++){
+    if(board[q][r]!==EMPTY) continue;
+    board[q][r]=cpuColor;
+    const cd = dijkstra(cpuColor);
+    const hd = dijkstra(humanColor);
+    board[q][r]=EMPTY;
+    const cx=(N-1)/2;
+    const centerBonus = -(Math.abs(q-cx)+Math.abs(r-cx))*0.01;
+    const score = (hd - cd) + centerBonus + Math.random()*0.001;
+    if(score>bestScore){ bestScore=score; best=[q,r]; bestCpu=cd; bestHuman=hd; }
+  }
+  return {move:best,ms:performance.now()-t0,bd:bestCpu,rd:bestHuman};
+}
+
+/* ----------  RENDER  ---------- */
+const SVG = document.getElementById('board');
+const NS = 'http://www.w3.org/2000/svg';
+
+function layout(){
+  const size = 1;
+  const w = Math.sqrt(3)*size;
+  const h = 2*size;
+  const pts = [];
+  for(let q=0;q<N;q++)for(let r=0;r<N;r++){
+    pts.push({q,r,x:w*(q + r/2), y:h*0.75*r});
+  }
+  const minX = Math.min(...pts.map(p=>p.x))-w/2;
+  const maxX = Math.max(...pts.map(p=>p.x))+w/2;
+  const minY = Math.min(...pts.map(p=>p.y))-h/2;
+  const maxY = Math.max(...pts.map(p=>p.y))+h/2;
+  return {pts,minX,minY,maxX,maxY,size,w,h};
+}
+
+function hexPath(cx,cy,size){
+  let d='';
+  for(let i=0;i<6;i++){
+    const a = Math.PI/180 * (60*i - 30);
+    const x = cx + size*Math.cos(a);
+    const y = cy + size*Math.sin(a);
+    d += (i?'L':'M')+x.toFixed(3)+','+y.toFixed(3);
+  }
+  return d+'Z';
+}
+
+function render(){
+  SVG.innerHTML='';
+  const L = layout();
+
+  // 60°/120° parallelogram outline.
+  // Top & bottom edges are horizontal; left & right edges have slope √3 (60°
+  // from horizontal). Cell-row axis in pointy-top axial layout is exactly √3,
+  // so left/right edges align with the hex grid's natural slant.
+  const padY = 0.35;                          // vertical padding outside cells
+  const sqrt3 = Math.sqrt(3);
+  const topY  = -L.h/2 - padY;
+  const botY  = L.h*0.75*(N-1) + L.h/2 + padY;
+  // BL sits just outside (0,N-1)'s bottom-left vertex; TL derived so slope=√3.
+  const padX = 0.35;
+  const BLx = (L.w*(N-1)/2 - L.w/2) - padX;
+  const TLx = BLx - (botY - topY) / sqrt3;
+  // TR sits just outside (N-1,0)'s top-right vertex; BR derived so slope=√3.
+  const TRx = (L.w*(N-1) + L.w/2) + padX;
+  const BRx = TRx + (botY - topY) / sqrt3;
+
+  // ViewBox must accommodate the wider parallelogram.
+  const pad = 0.6;
+  const minX = Math.min(TLx, BLx) - pad;
+  const maxX = Math.max(TRx, BRx) + pad;
+  const minY = topY - pad;
+  const maxY = botY + pad;
+  SVG.setAttribute('viewBox',`${minX} ${minY} ${maxX-minX} ${maxY-minY}`);
+
+  // Black fill parallelogram beneath everything.
+  const fillP = document.createElementNS(NS,'path');
+  fillP.setAttribute('class','board-fill');
+  fillP.setAttribute('d',
+    `M${TLx},${topY} L${TRx},${topY} L${BRx},${botY} L${BLx},${botY} Z`);
+  SVG.appendChild(fillP);
+
+  // Colored borders drawn as one path each so corners meet exactly with miter joins.
+  const eRed = document.createElementNS(NS,'path');
+  eRed.setAttribute('class','edge-r');
+  eRed.setAttribute('d',
+    `M${TLx},${topY} L${TRx},${topY} M${BLx},${botY} L${BRx},${botY}`);
+  SVG.appendChild(eRed);
+
+  const eBlue = document.createElementNS(NS,'path');
+  eBlue.setAttribute('class','edge-b');
+  eBlue.setAttribute('d',
+    `M${TLx},${topY} L${BLx},${botY} M${TRx},${topY} L${BRx},${botY}`);
+  SVG.appendChild(eBlue);
+
+  // Cells
+  for(const p of L.pts){
+    const v = board[p.q][p.r];
+    const cell = document.createElementNS(NS,'path');
+    let cls = 'hex' + (v!==EMPTY ? ' played' : '');
+    cell.setAttribute('class',cls);
+    cell.setAttribute('d',hexPath(p.x,p.y,L.size*0.95));
+    cell.addEventListener('click',()=>onClick(p.q,p.r));
+    SVG.appendChild(cell);
+
+    if(v!==EMPTY){
+      const g = document.createElementNS(NS,'g');
+      // Only the freshly placed stone gets the plop animation
+      if(lastMove && lastMove[0]===p.q && lastMove[1]===p.r){
+        g.setAttribute('class','stone-group');
+      }
+
+      const stone = document.createElementNS(NS,'path');
+      stone.setAttribute('class', v===RED ? 'stone-r' : 'stone-b');
+      stone.setAttribute('d', hexPath(p.x, p.y, L.size*0.74));
+      stone.style.pointerEvents='none';
+      g.appendChild(stone);
+
+      const hi = document.createElementNS(NS,'path');
+      hi.setAttribute('class', v===RED ? 'stone-r-hi' : 'stone-b-hi');
+      hi.setAttribute('d', hexPath(p.x - L.size*0.08, p.y - L.size*0.10, L.size*0.42));
+      hi.style.pointerEvents='none';
+      g.appendChild(hi);
+
+      SVG.appendChild(g);
+    }
+  }
+}
+
+/* ----------  GAME FLOW  ---------- */
+const turnEl = document.getElementById('turn');
+const turnText = document.getElementById('turn-text');
+const banner = document.getElementById('banner');
+const bannerText = document.getElementById('banner-text');
+const bannerSub = document.getElementById('banner-sub');
+const movesEl = document.getElementById('moves');
+const msEl = document.getElementById('ms');
+const bdEl = document.getElementById('bd');
+const rdEl = document.getElementById('rd');
+const sizeTag = document.getElementById('size-tag');
+
+function setTurn(){
+  if(gameOver) return;
+  if(turn===humanColor){
+    turnEl.className='turn you'; turnText.textContent='Your move';
+  } else {
+    turnEl.className='turn cpu'; turnText.textContent='CPU thinking…';
+  }
+}
+
+function onClick(q,r){
+  if(gameOver || turn!==humanColor) return;
+  if(board[q][r]!==EMPTY) return;
+  board[q][r]=humanColor; moveCount++;
+  lastMove = [q,r];
+  playPlop();
+  if(moveCount===1) firstMove=[q,r], canSwap=true;
+  else canSwap=false;
+  render(); movesEl.textContent=moveCount;
+
+  if(checkWin(humanColor)){ endGame(humanColor); return; }
+  turn=cpuColor; setTurn();
+  setTimeout(cpuTurn, 220);
+}
+
+function cpuTurn(){
+  if(gameOver) return;
+  if(moveCount===1 && cpuColor===BLUE && shouldSwap(firstMove)){
+    [humanColor,cpuColor] = [cpuColor,humanColor];
+    board[firstMove[0]][firstMove[1]] = humanColor;
+    lastMove = null;
+    render();
+    turn = humanColor;
+    setTurn();
+    bannerFlash('PIE RULE','CPU swapped colors');
+    return;
+  }
+  const {move,ms,bd,rd} = aiMove();
+  if(!move) return;
+  board[move[0]][move[1]] = cpuColor; moveCount++;
+  lastMove = move;
+  playPlop();
+  render(); movesEl.textContent=moveCount;
+  msEl.textContent = ms.toFixed(1);
+  bdEl.textContent = bd===Infinity?'∞':bd;
+  rdEl.textContent = rd===Infinity?'∞':rd;
+  if(checkWin(cpuColor)){ endGame(cpuColor); return; }
+  turn=humanColor; setTurn();
+}
+
+function shouldSwap(m){
+  const c=(N-1)/2;
+  const d = Math.abs(m[0]-c)+Math.abs(m[1]-c);
+  return d <= Math.floor(N/3);
+}
+
+function endGame(winner){
+  gameOver=true;
+  const youWon = (winner===humanColor);
+  banner.classList.add('show');
+  bannerText.textContent = youWon?'You win.':'CPU wins.';
+  bannerText.style.color = youWon?'var(--red)':'var(--blue)';
+  bannerSub.textContent = youWon?'connection complete · click NEW GAME':'click NEW GAME to play again';
+}
+
+function bannerFlash(t,s){
+  bannerText.textContent=t; bannerSub.textContent=s; banner.classList.add('show');
+  setTimeout(()=>banner.classList.remove('show'),900);
+}
+
+/* ----------  CONTROLS  ---------- */
+document.getElementById('new').addEventListener('click',()=>{
+  const n = parseInt(document.getElementById('size').value,10);
+  const who = document.getElementById('who').value;
+  banner.classList.remove('show');
+  newBoard(n);
+  humanColor = RED; cpuColor = BLUE;
+  sizeTag.textContent = `${n} × ${n}`;
+  movesEl.textContent='0'; msEl.textContent='—'; bdEl.textContent='—'; rdEl.textContent='—';
+  render(); setTurn();
+  if(who==='cpu'){ turn=cpuColor; setTurn(); setTimeout(cpuTurn,200); }
+});
+
+document.getElementById('swap').addEventListener('click',()=>{
+  if(moveCount!==1) { bannerFlash('PIE RULE','only available after move 1'); return; }
+  [humanColor,cpuColor]=[cpuColor,humanColor];
+  for(let q=0;q<N;q++)for(let r=0;r<N;r++){
+    if(board[q][r]!==EMPTY) board[q][r] = (board[q][r]===RED?BLUE:RED);
+  }
+  lastMove = null;
+  render();
+  turn = (turn===RED)?BLUE:RED;
+  setTurn();
+  bannerFlash('PIE RULE','colors swapped');
+  if(turn===cpuColor) setTimeout(cpuTurn,200);
+});
+
+/* ----------  INIT  ---------- */
+newBoard(11);
+render();
+setTurn();
+</script>
+</body>
+</html>
